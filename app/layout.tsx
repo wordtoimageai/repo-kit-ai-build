@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'RepoKit AI - Analyze and Deploy Any Repository',
+  description: 'Detect missing deployment files, auto-generate configurations, and deploy to Vercel, Railway, Render, or Fly.io with one click.',
   generator: 'v0.app',
   icons: {
     icon: [
