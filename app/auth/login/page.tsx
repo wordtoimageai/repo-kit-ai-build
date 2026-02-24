@@ -33,10 +33,6 @@ export default function Page() {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-        emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/dashboard`,
       })
       if (error) throw error
       router.push('/dashboard')
@@ -88,7 +84,7 @@ export default function Page() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
+                  {error && <p className="text-sm text-destructive">{error}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Logging in...' : 'Login'}
                   </Button>
