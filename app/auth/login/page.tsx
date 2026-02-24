@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { Code } from 'lucide-react'
 
 export default function Page() {
   const [email, setEmail] = useState('')
@@ -33,13 +34,12 @@ export default function Page() {
         email,
         password,
         options: {
-          emailRedirectTo:
+        emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/protected`,
-        },
+            `${window.location.origin}/dashboard`,
       })
       if (error) throw error
-      router.push('/protected')
+      router.push('/dashboard')
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {
@@ -51,11 +51,17 @@ export default function Page() {
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
+          <Link href="/" className="mx-auto flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <Code className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-semibold">RepoKit AI</span>
+          </Link>
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Login</CardTitle>
+              <CardTitle className="text-2xl">Sign in</CardTitle>
               <CardDescription>
-                Enter your email below to login to your account
+                Enter your email below to sign in to your account
               </CardDescription>
             </CardHeader>
             <CardContent>

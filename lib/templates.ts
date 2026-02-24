@@ -10,35 +10,37 @@ export function generateDockerfile(context: TemplateContext): string {
   const { language, framework, nodeVersion = '20', buildCommand, startCommand } = context
 
   if (language === 'javascript' || language === 'typescript') {
+    const lockfileCopy = context.packageManager === 'pnpm' ? '\nCOPY pnpm-lock.yaml ./' : context.packageManager === 'yarn' ? '\nCOPY yarn.lock ./' : ''
+    const installCmd = context.packageManager === 'pnpm' ? 'RUN npm install -g pnpm && pnpm install --frozen-lockfile' : context.packageManager === 'yarn' ? 'RUN yarn install --frozen-lockfile' : 'RUN npm ci'
+    const buildStep = buildCommand ? `\n# Build application\nRUN ${buildCommand}` : framework === 'next' ? '\n# Build application\nRUN npm run build' : ''
+    const port = context.port || '3000'
+    const startCmd = startCommand ? startCommand.split(' ').map(s => `"${s}"`).join(', ') : '"npm", "start"'
+
     return `FROM node:${nodeVersion}-alpine
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-${context.packageManager === 'pnpm' ? 'COPY pnpm-lock.yaml ./' : ''}
-${context.packageManager === 'yarn' ? 'COPY yarn.lock ./' : ''}
+COPY package*.json ./${lockfileCopy}
 
 # Install dependencies
-${context.packageManager === 'pnpm' ? 'RUN npm install -g pnpm && pnpm install --frozen-lockfile' : ''}
-${context.packageManager === 'yarn' ? 'RUN yarn install --frozen-lockfile' : ''}
-${context.packageManager === 'npm' || !context.packageManager ? 'RUN npm ci' : ''}
+${installCmd}
 
 # Copy application code
-COPY . .
-
-# Build application
-${buildCommand ? `RUN ${buildCommand}` : framework === 'next' ? 'RUN npm run build' : ''}
+COPY . .${buildStep}
 
 # Expose port
-EXPOSE ${context.port || '3000'}
+EXPOSE ${port}
 
 # Start application
-CMD [${startCommand ? `"${startCommand.split(' ')[0]}", "${startCommand.split(' ').slice(1).join(' ')}"` : '"npm", "start"'}]
+CMD [${startCmd}]
 `
   }
 
   if (language === 'python') {
+    const port = context.port || '8000'
+    const cmd = startCommand ? startCommand.split(' ').map(s => `"${s}"`).join(', ') : '"python", "app.py"'
+
     return `FROM python:3.11-slim
 
 WORKDIR /app
@@ -53,10 +55,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose port
-EXPOSE ${context.port || '8000'}
+EXPOSE ${port}
 
 # Start application
-CMD ${startCommand ? `["${startCommand.split(' ')[0]}", "${startCommand.split(' ').slice(1).join(' ')}"]` : '["python", "app.py"]'}
+CMD [${cmd}]
 `
   }
 
@@ -73,7 +75,7 @@ CMD ["npm", "start"]
 export function generateVercelJson(context: TemplateContext): string {
   const { framework, buildCommand } = context
 
-  const config: any = {
+  const config: Record<string, unknown> = {
     version: 2
   }
 
@@ -111,21 +113,22 @@ export function generateRailwayJson(context: TemplateContext): string {
 
 // Render configuration
 export function generateRenderYaml(context: TemplateContext): string {
-  const { repoName, framework, buildCommand, startCommand, language } = context
+  const { repoName, buildCommand, startCommand, language } = context
 
-  return `services:
-  - type: web
-    name: ${repoName}
-    runtime: ${language === 'python' ? 'python' : 'node'}
-    ${buildCommand ? `buildCommand: ${buildCommand}` : ''}
-    ${startCommand ? `startCommand: ${startCommand}` : 'startCommand: npm start'}
-    ${language === 'python' ? 'pythonVersion: "3.11"' : ''}
-    ${language !== 'python' ? 'nodeVersion: "20"' : ''}
-    envVars:
-      - key: NODE_ENV
-        value: production
-    autoDeploy: true
-`
+  const lines = [
+    'services:',
+    '  - type: web',
+    `    name: ${repoName}`,
+    `    runtime: ${language === 'python' ? 'python' : 'node'}`,
+  ]
+
+  if (buildCommand) lines.push(`    buildCommand: ${buildCommand}`)
+  lines.push(`    startCommand: ${startCommand || 'npm start'}`)
+  if (language === 'python') lines.push('    pythonVersion: "3.11"')
+  if (language !== 'python') lines.push('    nodeVersion: "20"')
+  lines.push('    envVars:', '      - key: NODE_ENV', '        value: production', '    autoDeploy: true')
+
+  return lines.join('\n') + '\n'
 }
 
 // Fly.io configuration

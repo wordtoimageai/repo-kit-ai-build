@@ -1,16 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { GitBranch, Upload, FileText, Loader2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { GitBranch, Upload, FileText, Loader2, AlertCircle } from 'lucide-react'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [analyzing, setAnalyzing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [githubUrl, setGithubUrl] = useState('')
   const [textPrompt, setTextPrompt] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -19,6 +23,7 @@ export default function DashboardPage() {
     if (!githubUrl) return
     
     setAnalyzing(true)
+    setError(null)
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -29,12 +34,14 @@ export default function DashboardPage() {
         })
       })
       
-      if (response.ok) {
-        const data = await response.json()
-        window.location.href = `/dashboard/analysis/${data.analysisId}`
+      const data = await response.json()
+      if (!response.ok) {
+        setError(data.error || 'Analysis failed. Please try again.')
+        return
       }
-    } catch (error) {
-      console.error('[v0] GitHub analysis error:', error)
+      router.push(`/dashboard/analysis/${data.analysisId}`)
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.')
     } finally {
       setAnalyzing(false)
     }
@@ -44,6 +51,7 @@ export default function DashboardPage() {
     if (!file) return
     
     setAnalyzing(true)
+    setError(null)
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -54,12 +62,14 @@ export default function DashboardPage() {
         body: formData
       })
       
-      if (response.ok) {
-        const data = await response.json()
-        window.location.href = `/dashboard/analysis/${data.analysisId}`
+      const data = await response.json()
+      if (!response.ok) {
+        setError(data.error || 'Upload failed. Please try again.')
+        return
       }
-    } catch (error) {
-      console.error('[v0] ZIP upload error:', error)
+      router.push(`/dashboard/analysis/${data.analysisId}`)
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.')
     } finally {
       setAnalyzing(false)
     }
@@ -69,6 +79,7 @@ export default function DashboardPage() {
     if (!textPrompt) return
     
     setAnalyzing(true)
+    setError(null)
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -79,12 +90,14 @@ export default function DashboardPage() {
         })
       })
       
-      if (response.ok) {
-        const data = await response.json()
-        window.location.href = `/dashboard/analysis/${data.analysisId}`
+      const data = await response.json()
+      if (!response.ok) {
+        setError(data.error || 'Generation failed. Please try again.')
+        return
       }
-    } catch (error) {
-      console.error('[v0] Text prompt error:', error)
+      router.push(`/dashboard/analysis/${data.analysisId}`)
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.')
     } finally {
       setAnalyzing(false)
     }
@@ -98,6 +111,13 @@ export default function DashboardPage() {
           Choose your input method to get started
         </p>
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <Tabs defaultValue="github" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

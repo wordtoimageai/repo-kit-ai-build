@@ -1,7 +1,7 @@
 import type { DetectedTechnology } from './types'
 
 interface FileStructure {
-  [key: string]: string | FileStructure
+  [key: string]: string
 }
 
 export interface AnalysisInput {
@@ -32,7 +32,7 @@ export function detectTechnology(files: FileStructure): DetectedTechnology {
   }
 
   // Parse package.json if available
-  if ('package.json' in files && typeof files['package.json'] === 'string') {
+  if ('package.json' in files) {
     try {
       const pkg = JSON.parse(files['package.json'])
       
@@ -86,10 +86,10 @@ export function detectTechnology(files: FileStructure): DetectedTechnology {
     if ('manage.py' in files) {
       tech.framework = 'django'
       tech.startCommand = 'python manage.py runserver'
-    } else if (typeof files['requirements.txt'] === 'string' && files['requirements.txt'].includes('flask')) {
+    } else if (files['requirements.txt']?.includes('flask')) {
       tech.framework = 'flask'
       tech.startCommand = 'python app.py'
-    } else if (typeof files['requirements.txt'] === 'string' && files['requirements.txt'].includes('fastapi')) {
+    } else if (files['requirements.txt']?.includes('fastapi')) {
       tech.framework = 'fastapi'
       tech.startCommand = 'uvicorn main:app --host 0.0.0.0'
     }
@@ -197,7 +197,7 @@ export function calculateDeployScore(input: AnalysisInput): AnalysisOutput {
   }
 
   // Security checks (5 points)
-  if ('package.json' in files && typeof files['package.json'] === 'string') {
+  if ('package.json' in files) {
     try {
       const pkg = JSON.parse(files['package.json'])
       if (pkg.dependencies || pkg.devDependencies) {

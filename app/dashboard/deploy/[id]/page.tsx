@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ExternalLink, Info } from 'lucide-react'
+import Link from 'next/link'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -64,9 +65,9 @@ export default async function DeployPage({ params, searchParams }: Props) {
         </CardHeader>
         <CardContent>
           <Button variant="outline" asChild>
-            <a href={`/dashboard/analysis/${id}`}>
+            <Link href={`/dashboard/analysis/${id}`}>
               View Generated Files
-            </a>
+            </Link>
           </Button>
         </CardContent>
       </Card>
@@ -106,9 +107,9 @@ git push origin main`}</code>
 
       <div className="mt-8 flex justify-center">
         <Button variant="outline" asChild>
-          <a href={`/dashboard/analysis/${id}`}>
+          <Link href={`/dashboard/analysis/${id}`}>
             Back to Analysis
-          </a>
+          </Link>
         </Button>
       </div>
     </div>

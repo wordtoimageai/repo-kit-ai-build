@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { calculateDeployScore, generatePlatformRecommendations, detectTechnology } from '@/lib/analyzer'
+import { calculateDeployScore, generatePlatformRecommendations } from '@/lib/analyzer'
 import { 
   generateDockerfile, 
   generateVercelJson, 
@@ -12,6 +12,7 @@ import {
   generateGitHubActions
 } from '@/lib/templates'
 import type { FileType } from '@/lib/types'
+import type { TemplateContext } from '@/lib/templates'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type')
     let input_type: string
     let input_value: string
-    let repoFiles: any = {}
+    let repoFiles: Record<string, string> = {}
 
     // Handle different input types
     if (contentType?.includes('multipart/form-data')) {
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate configuration files
-    const templateContext = {
+    const templateContext: TemplateContext = {
       repoName,
       ...analysisResult.detectedTech
     }
@@ -204,10 +205,10 @@ export async function POST(request: NextRequest) {
 
 // Helper functions
 
-async function fetchGitHubRepo(url: string): Promise<any> {
+async function fetchGitHubRepo(url: string): Promise<Record<string, string>> {
   // For MVP, simulate GitHub API call
   // In production, use Octokit to fetch actual repo contents
-  const mockFiles: any = {
+  const mockFiles: Record<string, string> = {
     'package.json': JSON.stringify({
       name: 'example-app',
       version: '1.0.0',
@@ -230,10 +231,10 @@ async function fetchGitHubRepo(url: string): Promise<any> {
   return mockFiles
 }
 
-async function extractZipFiles(file: File): Promise<any> {
+async function extractZipFiles(file: File): Promise<Record<string, string>> {
   // For MVP, return mock structure
   // In production, extract and parse ZIP contents
-  const mockFiles: any = {
+  const mockFiles: Record<string, string> = {
     'package.json': JSON.stringify({
       name: 'uploaded-project',
       version: '1.0.0',
@@ -251,48 +252,78 @@ async function extractZipFiles(file: File): Promise<any> {
   return mockFiles
 }
 
-async function generateFromPrompt(prompt: string): Promise<any> {
+async function generateFromPrompt(prompt: string): Promise<Record<string, string>> {
   // For MVP, create basic structure based on keywords
   // In production, use AI to generate full structure
-  const isNextJs = prompt.toLowerCase().includes('next')
-  const isReact = prompt.toLowerCase().includes('react')
-  const isExpress = prompt.toLowerCase().includes('express')
+  const lower = prompt.toLowerCase()
+  const isNextJs = lower.includes('next')
+  const isReact = lower.includes('react')
+  const isExpress = lower.includes('express') || lower.includes('api') || lower.includes('backend')
+  const isPython = lower.includes('python') || lower.includes('flask') || lower.includes('django') || lower.includes('fastapi')
 
-  const mockFiles: any = {}
+  const mockFiles: Record<string, string> = {}
 
   if (isNextJs) {
     mockFiles['package.json'] = JSON.stringify({
       name: 'ai-generated-nextjs',
       version: '1.0.0',
-      scripts: {
-        dev: 'next dev',
-        build: 'next build',
-        start: 'next start'
-      },
-      dependencies: {
-        next: '^14.0.0',
-        react: '^18.0.0',
-        'react-dom': '^18.0.0'
-      }
+      scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+      dependencies: { next: '^14.0.0', react: '^18.0.0', 'react-dom': '^18.0.0' }
     })
     mockFiles['README.md'] = '# AI Generated Next.js App\n\n' + prompt
-  } else if (isReact || isExpress) {
+    mockFiles['.gitignore'] = 'node_modules\n.env\n.next'
+  } else if (isReact) {
     mockFiles['package.json'] = JSON.stringify({
-      name: 'ai-generated-app',
+      name: 'ai-generated-react',
       version: '1.0.0',
-      dependencies: isReact ? { react: '^18.0.0' } : { express: '^4.18.0' }
+      scripts: { dev: 'vite', build: 'vite build', start: 'vite preview' },
+      dependencies: { react: '^18.0.0', 'react-dom': '^18.0.0' },
+      devDependencies: { vite: '^5.0.0', '@vitejs/plugin-react': '^4.0.0' }
     })
-    mockFiles['README.md'] = '# AI Generated App\n\n' + prompt
+    mockFiles['README.md'] = '# AI Generated React App\n\n' + prompt
+    mockFiles['.gitignore'] = 'node_modules\n.env\ndist'
+  } else if (isExpress) {
+    mockFiles['package.json'] = JSON.stringify({
+      name: 'ai-generated-api',
+      version: '1.0.0',
+      scripts: { start: 'node index.js', dev: 'nodemon index.js' },
+      dependencies: { express: '^4.18.0' }
+    })
+    mockFiles['index.js'] = 'const express = require("express");\nconst app = express();\napp.get("/", (req, res) => res.json({ status: "ok" }));\napp.listen(3000);'
+    mockFiles['README.md'] = '# AI Generated API\n\n' + prompt
+    mockFiles['.gitignore'] = 'node_modules\n.env'
+  } else if (isPython) {
+    mockFiles['requirements.txt'] = lower.includes('flask') ? 'flask\ngunicorn' : lower.includes('fastapi') ? 'fastapi\nuvicorn' : 'flask\ngunicorn'
+    mockFiles['app.py'] = '# Auto-generated from prompt\nprint("Hello World")'
+    mockFiles['README.md'] = '# AI Generated Python App\n\n' + prompt
+    mockFiles['.gitignore'] = '__pycache__\n.env\nvenv'
+  } else {
+    // Default: generate a Node.js project for any unrecognized prompt
+    mockFiles['package.json'] = JSON.stringify({
+      name: 'ai-generated-project',
+      version: '1.0.0',
+      scripts: { start: 'node index.js' },
+      dependencies: {}
+    })
+    mockFiles['index.js'] = '// Auto-generated from prompt\nconsole.log("Hello World");'
+    mockFiles['README.md'] = '# AI Generated Project\n\n' + prompt
+    mockFiles['.gitignore'] = 'node_modules\n.env'
   }
 
   return mockFiles
 }
 
 function extractRepoName(input: string): string {
-  // Extract repo name from GitHub URL or use input
+  // Extract repo name from GitHub URL
   if (input.includes('github.com')) {
     const parts = input.split('/')
     return parts[parts.length - 1].replace('.git', '')
   }
-  return input.split('/').pop() || 'repository'
+  // For ZIP files, use the filename
+  if (input.endsWith('.zip')) {
+    return input.replace('.zip', '')
+  }
+  // For text prompts, create a slug from the first few words
+  const words = input.trim().split(/\s+/).slice(0, 4).join('-').toLowerCase()
+  return words.replace(/[^a-z0-9-]/g, '').slice(0, 40) || 'repository'
 }
