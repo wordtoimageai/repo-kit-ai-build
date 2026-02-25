@@ -159,9 +159,7 @@ primary_region = "iad"
 export function generateDockerCompose(context: TemplateContext): string {
   const { repoName, port = '3000' } = context
 
-  return `version: '3.8'
-
-services:
+  return `services:
   app:
     build: .
     ports:
@@ -201,7 +199,27 @@ export function generateEnvExample(context: TemplateContext): string {
 
 // GitHub Actions CI/CD
 export function generateGitHubActions(context: TemplateContext): string {
-  const { framework, buildCommand, packageManager = 'npm' } = context
+  const { buildCommand, packageManager = 'npm' } = context
+  const installCmd = packageManager === 'pnpm' ? 'pnpm install' : packageManager === 'yarn' ? 'yarn install' : 'npm ci'
+
+  const steps = [
+    '      - uses: actions/checkout@v4',
+    '',
+    '      - name: Setup Node.js',
+    '        uses: actions/setup-node@v4',
+    '        with:',
+    "          node-version: '20'",
+    `          cache: '${packageManager}'`,
+    '',
+    '      - name: Install dependencies',
+    `        run: ${installCmd}`,
+  ]
+
+  if (buildCommand) {
+    steps.push('', '      - name: Build', `        run: ${buildCommand}`)
+  }
+
+  steps.push('', '      - name: Run tests', `        run: ${packageManager} test`, '        continue-on-error: true')
 
   return `name: CI/CD Pipeline
 
@@ -216,22 +234,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: '${packageManager}'
-      
-      - name: Install dependencies
-        run: ${packageManager === 'pnpm' ? 'pnpm install' : packageManager === 'yarn' ? 'yarn install' : 'npm ci'}
-      
-      ${buildCommand ? `- name: Build
-        run: ${buildCommand}
-      ` : ''}
-      - name: Run tests
-        run: ${packageManager} test
-        continue-on-error: true
+${steps.join('\n')}
 `
 }

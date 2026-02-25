@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Check, AlertCircle, Download, ExternalLink, TrendingUp } from 'lucide-react'
+import { Check, AlertCircle, ExternalLink, TrendingUp, Rocket } from 'lucide-react'
 import Link from 'next/link'
+import { FileDownloadButton } from './_components/file-download-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -147,10 +148,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
                   <code>{file.file_content}</code>
                 </pre>
                 <div className="mt-4 flex gap-2">
-                  <Button size="sm" variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </Button>
+                  <FileDownloadButton fileName={file.file_name} fileContent={file.file_content} />
                 </div>
               </CardContent>
             </Card>
@@ -207,6 +205,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
 
                 <Button className="w-full" asChild>
                   <Link href={`/dashboard/deploy/${analysis.id}?platform=${rec.platform}`}>
+                    <Rocket className="mr-2 h-4 w-4" />
                     Deploy to {rec.platform}
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </Link>

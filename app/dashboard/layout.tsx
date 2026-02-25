@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Code, History, LogOut, PlusCircle } from 'lucide-react'
+import { Code, History, LogOut, PlusCircle, Wand2 } from 'lucide-react'
 
 export default async function DashboardLayout({
   children,
@@ -33,6 +33,12 @@ export default async function DashboardLayout({
               <Link href="/dashboard">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Analysis
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/dashboard/builder">
+                <Wand2 className="mr-2 h-4 w-4" />
+                AI Builder
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
