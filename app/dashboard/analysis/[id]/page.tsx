@@ -182,7 +182,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
                 <div>
                   <div className="text-sm font-medium">Pros</div>
                   <ul className="mt-2 space-y-1">
-                    {rec.pros.map((pro, idx) => (
+                    {(rec.pros as string[]).map((pro: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
                         <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" />
                         <span>{pro}</span>
@@ -194,7 +194,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
                 <div>
                   <div className="text-sm font-medium">Cons</div>
                   <ul className="mt-2 space-y-1">
-                    {rec.cons.map((con, idx) => (
+                    {(rec.cons as string[]).map((con: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
                         <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                         <span>{con}</span>
