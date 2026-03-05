@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Check, AlertCircle, Download, ExternalLink, TrendingUp } from 'lucide-react'
+import { Check, AlertCircle, ExternalLink, TrendingUp, Rocket } from 'lucide-react'
 import Link from 'next/link'
+import { FileDownloadButton } from './_components/file-download-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -147,10 +148,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
                   <code>{file.file_content}</code>
                 </pre>
                 <div className="mt-4 flex gap-2">
-                  <Button size="sm" variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </Button>
+                  <FileDownloadButton fileName={file.file_name} fileContent={file.file_content} />
                 </div>
               </CardContent>
             </Card>
@@ -184,7 +182,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
                 <div>
                   <div className="text-sm font-medium">Pros</div>
                   <ul className="mt-2 space-y-1">
-                    {rec.pros.map((pro, idx) => (
+                    {(rec.pros as string[]).map((pro: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm">
                         <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" />
                         <span>{pro}</span>
@@ -196,7 +194,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
                 <div>
                   <div className="text-sm font-medium">Cons</div>
                   <ul className="mt-2 space-y-1">
-                    {rec.cons.map((con, idx) => (
+                    {(rec.cons as string[]).map((con: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
                         <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                         <span>{con}</span>
@@ -207,6 +205,7 @@ export default async function AnalysisDetailPage({ params }: Props) {
 
                 <Button className="w-full" asChild>
                   <Link href={`/dashboard/deploy/${analysis.id}?platform=${rec.platform}`}>
+                    <Rocket className="mr-2 h-4 w-4" />
                     Deploy to {rec.platform}
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </Link>

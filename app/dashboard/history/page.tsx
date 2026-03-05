@@ -75,7 +75,7 @@ export default async function HistoryPage() {
                     <CardDescription className="mt-2 flex items-center gap-4">
                       <span className="flex items-center gap-1.5">
                         {getInputIcon(analysis.input_type)}
-                        {analysis.input_type.replace('_', ' ')}
+                        {analysis.input_type.replaceAll('_', ' ')}
                       </span>
                       <span>•</span>
                       <span>
